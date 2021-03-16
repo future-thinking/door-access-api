@@ -15,7 +15,7 @@ var db;
 (async () => {
     // open the database
     db = await open({
-      filename: path.join(__dirname, 'api.db') ,
+      filename: path.join(__dirname, '../api.db'),
       driver: sqlite3.Database,
       
     })
