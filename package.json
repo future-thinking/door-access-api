@@ -1,0 +1,27 @@
+{
+  "name": "door-access-api-new",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shatter00/door-access-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Shatter00/door-access-api/issues"
+  },
+  "homepage": "https://github.com/Shatter00/door-access-api#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "sqlite": "^4.0.19",
+    "sqlite3": "^5.0.2",
+    "uuid-token-generator": "^1.0.0"
+  }
+}
