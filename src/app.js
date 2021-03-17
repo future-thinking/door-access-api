@@ -49,10 +49,18 @@ app.get("/user/:user/cards", async (req, res)=> {
     res.send(cards);
 })
 
+app.get("/info", (req, res) => {
+    res.send(JSON.stringify(
+        {
+            version: 1,
+            api: "ft"
+        }
+    ))
+})
+
 app.get('/auth', async (req, res) => {
     if (req.body.username && req.body.password) {
 
-//TODO LOGIN
         const { username, password } = req.body;
 
         const result = await db.get("SELECT * FROM users WHERE LOWER(username) LIKE LOWER(?) AND password=?", [username, password]);
