@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Shatter00/door-access-api#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "express-bearer-token": "^2.4.0",
     "sqlite": "^4.0.19",
     "sqlite3": "^5.0.2",
     "uuid-token-generator": "^1.0.0"
