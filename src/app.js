@@ -70,6 +70,13 @@ app.get("/door", async (req, res) => {
         }))
         return;
     }
+    else {
+        res.send(JSON.stringify({
+            open: true,
+            reason: "allowed"
+        }))
+        return;
+    }
 })
 
 app.get('/auth', async (req, res) => {
