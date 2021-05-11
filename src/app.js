@@ -209,7 +209,7 @@ app.post("/add/:user/card", async (req, res) => {
             user: userID
         }
         
-        /*setTimeout(() => {
+        setTimeout(() => {
             
             doorMode = { 
                 mode: doorModes.DEFAULT
@@ -218,7 +218,7 @@ app.post("/add/:user/card", async (req, res) => {
 
             10000
 
-        )*/
+        )
 
         res.status(200).send("ok");
     }
