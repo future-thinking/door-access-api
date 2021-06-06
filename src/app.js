@@ -24,7 +24,7 @@ var db;
     db.run("CREATE TABLE IF NOT EXISTS users (username TEXT, password TEXT)");
     db.run("CREATE TABLE IF NOT EXISTS tokens (user TEXT, token TEXT)");
     db.run("CREATE TABLE IF NOT EXISTS cards (user TEXT, card TEXT)");
-    db.run("CREATE TABLE IF NOT EXISTS permissions (user TEXT, permission TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS permissions (user TEXT, permission)");
 })()
 
 const app = express()
@@ -85,14 +85,28 @@ app.get("/door", async (req, res) => {
     if (doorMode.mode == doorModes.SCAN) {
         doorMode.mode = doorModes.DEFAULT
 
-        res.send(JSON.stringify({
-            open: false,
-            reason: "scanning"
-        }))
+        const existing = await db.get("SELECT card FROM cards WHERE card=?", [cardData]);
 
-        db.run("INSERT INTO cards (user, card) VALUES (?, ?)", [doorMode.user.rowid, cardData])
+        if (!existing) {        
+            db.run("INSERT INTO cards (user, card) VALUES (?, ?)", [doorMode.user.rowid, cardData])
+    
+            res.send(JSON.stringify({
+                open: false,
+                reason: "scanning"
+            }))
+    
+            return;
+        }
 
-        console.log(doorMode.user);
+        else {
+            res.send(JSON.stringify({
+                open: false,
+                reason: "scanning",
+                card: "card already exists"
+            }))
+
+            return;
+        }
 
         return;
     }
@@ -105,7 +119,7 @@ app.get("/door", async (req, res) => {
         return;
     }
 
-    const permission = await db.get("SELECT *, rowid FROM permissions WHERE permission=\"door.open\" AND user=?", [card.user]);
+    const permission = await db.get("SELECT *, rowid FROM permissions WHERE permission=\"open.door\" AND user=?", [card.user]);
 
     if (!permission) {
         res.send(JSON.stringify({
@@ -128,16 +142,14 @@ app.get('/auth', async (req, res) => {
 
         const { username, password } = req.body;
 
-        const result = await db.get("SELECT * FROM users WHERE LOWER(username) LIKE LOWER(?) AND password=?", [username, password]);
-
-        console.log(result);
+        const result = await db.get("SELECT *, rowid FROM users WHERE LOWER(username) LIKE LOWER(?) AND password=?", [username, password]);
 
         if (!result) {
             res.status(405).send("incorrect username or password");
             return;
         }
 
-        const user = result.user;
+        const user = result.rowid;
 
         const token = tokgen.generate()
 
@@ -202,7 +214,9 @@ app.post("/add/:user/card", async (req, res) => {
 
     const userID = await db.get("SELECT *, rowid FROM users WHERE LOWER(username) LIKE LOWER(?)", [req.params.user]);
 
-    if (req.permissions.includes("add_card")) {
+    console.log(userID)
+
+    if (req.permissions.includes("add.card")) {
 
         doorMode = { 
             mode: doorModes.SCAN,
@@ -228,6 +242,41 @@ app.post("/add/:user/card", async (req, res) => {
     }
 })
 
+app.patch("/user/:user/permissions/:permission", async (req, res) => {
+    
+    const permission = req.params.permission
+    const username = await db.get("SELECT *, rowId FROM users WHERE LOWER(username)=LOWER(?)", [req.params.user]);
+    const existing = await db.get("SELECT permission FROM permissions WHERE permission=? AND user=?", [permission, username.rowid]);
+
+    if (req.permissions.includes("add.permission") && req.query.changePermission == "add" && !existing){
+        await db.all("INSERT INTO permissions (user, permission) VALUES (?, ?)", [username.rowid, permission])
+
+        res.status(200).send("ok");
+
+        return;
+    }
+
+    else if (req.permissions.includes("remove.permission") && req.query.changePermission == "remove"){
+        await db.all("DELETE FROM permissions WHERE user=? AND permission=?", [username.rowid, permission])
+
+        res.status(200).send("ok");
+
+        return;
+    }
+
+    else if (existing){
+        res.send("permission already exists")
+        
+        return;
+    }
+
+    else {
+        res.send("insufficient permission")
+
+        return;
+    }
+}); 
+
 app.get("/info", (req, res) => {
     res.send(JSON.stringify(
         {
@@ -239,7 +288,7 @@ app.get("/info", (req, res) => {
 
 app.put("/open", async (req, res) => {
 
-    if (req.permissions.includes("open_door")) {
+    if (req.permissions.includes("open.remote")) {
 
         doorMode = doorModes.OPEN
         setTimeout(() => {
