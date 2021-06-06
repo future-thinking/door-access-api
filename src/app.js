@@ -24,7 +24,7 @@ var db;
     db.run("CREATE TABLE IF NOT EXISTS users (username TEXT, password TEXT)");
     db.run("CREATE TABLE IF NOT EXISTS tokens (user TEXT, token TEXT)");
     db.run("CREATE TABLE IF NOT EXISTS cards (user TEXT, card TEXT)");
-    db.run("CREATE TABLE IF NOT EXISTS permissions (user TEXT, permission)");
+    db.run("CREATE TABLE IF NOT EXISTS permissions (user TEXT, permission TEXT)");
 })()
 
 const app = express()
