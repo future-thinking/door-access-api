@@ -43,8 +43,6 @@ var doorMode = {
     mode: doorModes.DEFAULT
 }
 
-console.log(doorMode)
-
 app.post("/add/user", async (req, res) => {
     
     const username = req.query.username
@@ -178,12 +176,8 @@ app.use(async (req, res, next) => {
         return;
     }
 
-    console.log(user.user);
-
     const permissions = (await db.all("SELECT *, rowid FROM permissions WHERE user=?", [user.user])) .map(el => el.permission);
     req.permissions = permissions
-
-    console.log(req.permissions);
 
     const userObject = await db.get("SELECT *, rowid FROM users WHERE rowid=?", [user.user]);
     req.user = userObject
@@ -196,8 +190,6 @@ app.get("/user/:user/cards", async (req, res) => {
 
     const user = await db.get("SELECT *, rowid FROM users WHERE LOWER(username) LIKE LOWER(?)", [req.params.user]);
 
-    console.log(user);
-
     if (!user) {
         res.send("user not found")
         return;
@@ -205,16 +197,12 @@ app.get("/user/:user/cards", async (req, res) => {
 
     const cards = await db.all("SELECT *, rowid FROM cards WHERE user=?", [user.rowid])
 
-    console.log(user.rowid);
-
     res.send(cards);
 })
 
 app.post("/add/:user/card", async (req, res) => {
 
     const userID = await db.get("SELECT *, rowid FROM users WHERE LOWER(username) LIKE LOWER(?)", [req.params.user]);
-
-    console.log(userID)
 
     if (req.permissions.includes("add.card")) {
 
