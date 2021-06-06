@@ -17,13 +17,12 @@ let db;
     // open the database
     db = await open({
         filename: path.join(__dirname, '../api.db'),
-        driver: sqlite3.Database,
-
-    })
-    await db.run(`CREATE TABLE IF NOT EXISTS users (username TEXT, password TEXT)`);
-    await db.run(`CREATE TABLE IF NOT EXISTS tokens (user TEXT, token TEXT)`);
-    await db.run(`CREATE TABLE IF NOT EXISTS cards (user TEXT, card TEXT)`);
-    await db.run(`CREATE TABLE IF NOT EXISTS permissions (user TEXT, permission TEXT)`);
+        driver: sqlite3.Database
+    });
+    await db.run(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY NOT NULL, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL)`);
+    await db.run(`CREATE TABLE IF NOT EXISTS tokens (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, token TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
+    await db.run(`CREATE TABLE IF NOT EXISTS cards (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, card TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
+    await db.run(`CREATE TABLE IF NOT EXISTS permissions (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, permission TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
     console.log("Initialized Database");
 })()
 
@@ -70,22 +69,22 @@ app.get("/door", async (req, res) => {
 
     const cardData = req.query.card;
 
-    const card = await db.get(`SELECT *, rowid FROM cards WHERE card=?`, [cardData]);
+    const card = await db.get(`SELECT * FROM cards WHERE card=?`, [cardData]);
 
     console.log(card);
 
     if (doorMode.mode === doorModes.SCAN) {
-        doorMode.mode = doorModes.DEFAULT
+        doorMode.mode = doorModes.DEFAULT;
 
         const existing = await db.get(`SELECT card FROM cards WHERE card=?`, [cardData]);
 
         if (!existing) {        
-            db.run(`INSERT INTO cards (user, card) VALUES (?, ?)`, [doorMode.user.rowid, cardData])
+            db.run(`INSERT INTO cards (userID, card) VALUES (?, ?)`, [doorMode.userID, cardData]);
     
             res.send(JSON.stringify({
                 open: false,
                 reason: "scanning"
-            }))
+            }));
     
             return;
         }
@@ -95,7 +94,7 @@ app.get("/door", async (req, res) => {
                 open: false,
                 reason: "scanning",
                 card: "card already exists"
-            }))
+            }));
             return;
         }
     }
@@ -104,23 +103,23 @@ app.get("/door", async (req, res) => {
         res.send(JSON.stringify({
             open: false,
             reason: "card not found"
-        }))
+        }));
         return;
     }
 
-    const permission = await db.get(`SELECT *, rowid FROM permissions WHERE permission='open.door' AND user=?`, [card.user]);
+    const permission = await db.get(`SELECT * FROM permissions WHERE permission='open.door' AND userID=?`, [card.userID]);
 
     if (!permission) {
         res.send(JSON.stringify({
             open: false,
             reason: "no permission"
-        }))
+        }));
     }
     else {
         res.send(JSON.stringify({
             open: true,
             reason: "allowed"
-        }))
+        }));
     }
 })
 
@@ -129,18 +128,18 @@ app.get('/auth', async (req, res) => {
 
         const { username, password } = req.body;
 
-        const result = await db.get(`SELECT *, rowid FROM users WHERE LOWER(username) LIKE LOWER(?) AND password=?`, [username, password]);
+        const result = await db.get(`SELECT * FROM users WHERE LOWER(username) LIKE LOWER(?) AND password=?`, [username, password]);
 
         if (!result) {
             res.status(405).send("incorrect username or password");
             return;
         }
 
-        const user = result.rowid;
+        const user = result.id;
 
-        const token = tokgen.generate()
+        const token = tokgen.generate();
 
-        db.run(`INSERT INTO tokens VALUES (?, ?)`, [user, token]);
+        db.run(`INSERT INTO tokens (userID, token) VALUES (?, ?)`, [user, token]);
 
         res.send(token);
 
@@ -156,43 +155,43 @@ app.use(async (req, res, next) => {
         return;
     }
 
-    const user = await db.get(`SELECT *, rowid FROM tokens WHERE token=?`, [req.token]);
+    const user = await db.get(`SELECT * FROM tokens WHERE token=?`, [req.token]);
 
     if (!user) {
         res.send("unauthorized");
         return;
     }
 
-    req.permissions = (await db.all(`SELECT *, rowid FROM permissions WHERE user=?`, [user.user])) .map(el => el.permission);
+    req.permissions = (await db.all(`SELECT * FROM permissions WHERE userID=?`, [user.userID])).map(el => el.permission);
 
-    req.user = await db.get(`SELECT *, rowid FROM users WHERE rowid=?`, [user.user]);
+    req.user = await db.get(`SELECT * FROM users WHERE id=?`, [user.userID]);
 
-    next()
+    next();
 });
 
 app.get("/user/:user/cards", async (req, res) => {
 
-    const user = await db.get(`SELECT *, rowid FROM users WHERE LOWER(username) LIKE LOWER(?)`, [req.params.user]);
+    const user = await db.get(`SELECT * FROM users WHERE LOWER(username) LIKE LOWER(?)`, [req.params.user]);
 
     if (!user) {
         res.send("user not found");
         return;
     }
 
-    const cards = await db.all(`SELECT *, rowid FROM cards WHERE user=?`, [user.rowid]);
+    const cards = await db.all(`SELECT * FROM cards WHERE userID=?`, [user.id]);
 
     res.send(cards);
 })
 
 app.post("/add/:user/card", async (req, res) => {
 
-    const userID = await db.get(`SELECT *, rowid FROM users WHERE LOWER(username) LIKE LOWER(?)`, [req.params.user]);
+    const user = await db.get(`SELECT * FROM users WHERE LOWER(username) LIKE LOWER(?)`, [req.params.user]);
 
     if (req.permissions.includes("add.card")) {
 
         doorMode = { 
             mode: doorModes.SCAN,
-            user: userID
+            userID: user.id
         }
         
         setTimeout(() => {
@@ -210,17 +209,17 @@ app.post("/add/:user/card", async (req, res) => {
 app.patch("/user/:user/permissions/:permission", async (req, res) => {
     
     const permission = req.params.permission;
-    const username = await db.get(`SELECT *, rowId FROM users WHERE LOWER(username)=LOWER(?)`, [req.params.user]);
-    const existing = await db.get(`SELECT permission FROM permissions WHERE permission=? AND user=?`, [permission, username.rowid]);
+    const user = await db.get(`SELECT * FROM users WHERE LOWER(username) = LOWER(?)`, [req.params.user]);
+    const existing = await db.get(`SELECT permission FROM permissions WHERE permission = ? AND userID = ?`, [permission, user.id]);
 
     if (req.permissions.includes("add.permission") && req.query.changePermission === "add" && !existing){
-        await db.all("INSERT INTO permissions (user, permission) VALUES (?, ?)", [username.rowid, permission]);
+        await db.all("INSERT INTO permissions (userID, permission) VALUES (?, ?)", [user.id, permission]);
 
         res.status(200).send("ok");
     }
 
     else if (req.permissions.includes("remove.permission") && req.query.changePermission === "remove"){
-        await db.all("DELETE FROM permissions WHERE user=? AND permission=?", [username.rowid, permission]);
+        await db.all("DELETE FROM permissions WHERE userID=? AND permission=?", [user.id, permission]);
 
         res.status(200).send("ok");
     }
