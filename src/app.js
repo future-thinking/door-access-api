@@ -23,6 +23,7 @@ let db;
     await db.run(`CREATE TABLE IF NOT EXISTS tokens (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, token TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
     await db.run(`CREATE TABLE IF NOT EXISTS cards (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, card TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
     await db.run(`CREATE TABLE IF NOT EXISTS permissions (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, permission TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
+    await db.run(`CREATE TABLE IF NOT EXISTS logs (time TIME PRIMARY KEY NOT NULL, userID INTEGER,  action TEXT NOT NULL, FOREIGN KEY (userID) REFERENCES users (id))`);
     console.log("Initialized Database");
 })()
 
@@ -65,7 +66,7 @@ app.post("/add/user", async (req, res) => {
 });
 
 app.get("/door", async (req, res) => {
-    //todo door authentication
+    //TODO door authentication
 
     const cardData = req.query.card;
 
@@ -80,7 +81,7 @@ app.get("/door", async (req, res) => {
 
         if (!existing) {        
             db.run(`INSERT INTO cards (userID, card) VALUES (?, ?)`, [doorMode.userID, cardData]);
-    
+            db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), doorMode.userID, `add card ${cardData}`]);
             res.send(JSON.stringify({
                 open: false,
                 reason: "scanning"
@@ -90,6 +91,7 @@ app.get("/door", async (req, res) => {
         }
 
         else {
+            db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), doorMode.userID, `card to be added already exists`]);
             res.send(JSON.stringify({
                 open: false,
                 reason: "scanning",
@@ -100,6 +102,7 @@ app.get("/door", async (req, res) => {
     }
 
     if (!card) {
+        db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), null, `scanned card not found`]);
         res.send(JSON.stringify({
             open: false,
             reason: "card not found"
@@ -110,12 +113,14 @@ app.get("/door", async (req, res) => {
     const permission = await db.get(`SELECT * FROM permissions WHERE permission='open.door' AND userID=?`, [card.userID]);
 
     if (!permission) {
+        db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), card.userID, `user does not have permission to open door`]);
         res.send(JSON.stringify({
             open: false,
             reason: "no permission"
         }));
     }
     else {
+        db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), card.userID, `door opened by user`]);
         res.send(JSON.stringify({
             open: true,
             reason: "allowed"
@@ -263,5 +268,23 @@ app.get("/cards", (req, res) => {
 app.listen(80, function () {
     console.log('App listening');
 });
+
+function toIsoString(date) {
+    let tzo = -date.getTimezoneOffset(),
+        dif = tzo >= 0 ? '+' : '-',
+        pad = function(num) {
+            let norm = Math.floor(Math.abs(num));
+            return (norm < 10 ? '0' : '') + norm;
+        };
+
+    return date.getFullYear() +
+        '-' + pad(date.getMonth() + 1) +
+        '-' + pad(date.getDate()) +
+        'T' + pad(date.getHours()) +
+        ':' + pad(date.getMinutes()) +
+        ':' + pad(date.getSeconds()) +
+        dif + pad(tzo / 60) +
+        ':' + pad(tzo % 60);
+}
 
 
