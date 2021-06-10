@@ -21,9 +21,9 @@ let db;
     });
     await db.run(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY NOT NULL, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL)`);
     await db.run(`CREATE TABLE IF NOT EXISTS tokens (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, token TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
-    await db.run(`CREATE TABLE IF NOT EXISTS cards (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, card TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
+    await db.run(`CREATE TABLE IF NOT EXISTS cards (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER, card TEXT NOT NULL, FOREIGN KEY (userID) REFERENCES users (id))`);
     await db.run(`CREATE TABLE IF NOT EXISTS permissions (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, permission TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);
-    await db.run(`CREATE TABLE IF NOT EXISTS logs (time TIME PRIMARY KEY NOT NULL, userID INTEGER,  action TEXT NOT NULL, FOREIGN KEY (userID) REFERENCES users (id))`);
+    await db.run(`CREATE TABLE IF NOT EXISTS logs (time TIME PRIMARY KEY NOT NULL, userID INTEGER, cardID INTEGER, action TEXT NOT NULL, FOREIGN KEY (userID) REFERENCES users (id), FOREIGN KEY (cardID) REFERENCES cards (id))`);
     console.log("Initialized Database");
 })()
 
@@ -81,7 +81,8 @@ app.get("/door", async (req, res) => {
 
         if (!existing) {        
             db.run(`INSERT INTO cards (userID, card) VALUES (?, ?)`, [doorMode.userID, cardData]);
-            db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), doorMode.userID, `add card ${cardData}`]);
+            const newCard = await db.run(`SELECT * FROM cards WHERE card = ?`, [cardData]);
+            db.run(`INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), doorMode.userID, newCard.id, `add card ${cardData}`]);
             res.send(JSON.stringify({
                 open: false,
                 reason: "scanning"
@@ -91,7 +92,7 @@ app.get("/door", async (req, res) => {
         }
 
         else {
-            db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), doorMode.userID, `card to be added already exists`]);
+            db.run(`INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?, ?)`, [toIsoString(new Date()), doorMode.userID, card.id, `card to be added already exists`]);
             res.send(JSON.stringify({
                 open: false,
                 reason: "scanning",
@@ -102,7 +103,9 @@ app.get("/door", async (req, res) => {
     }
 
     if (!card) {
-        db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), null, `scanned card not found`]);
+        db.run(`INSERT INTO cards (userID, card) VALUES (?, ?)`, [doorMode.userID, cardData]);
+        const newCard = await db.run(`SELECT * FROM cards WHERE card = ?`, [cardData]);
+        db.run(`INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), null, newCard.id, `scanned card not found`]);
         res.send(JSON.stringify({
             open: false,
             reason: "card not found"
@@ -113,14 +116,14 @@ app.get("/door", async (req, res) => {
     const permission = await db.get(`SELECT * FROM permissions WHERE permission='open.door' AND userID=?`, [card.userID]);
 
     if (!permission) {
-        db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), card.userID, `user does not have permission to open door`]);
+        db.run(`INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?, ?)`, [toIsoString(new Date()), card.userID, card.id, `user does not have permission to open door`]);
         res.send(JSON.stringify({
             open: false,
             reason: "no permission"
         }));
     }
     else {
-        db.run(`INSERT INTO logs (time, userID, action) VALUES (datetime(?), ?, ?)`, [toIsoString(new Date()), card.userID, `door opened by user`]);
+        db.run(`INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?, ?)`, [toIsoString(new Date()), card.userID, card.id, `door opened by user`]);
         res.send(JSON.stringify({
             open: true,
             reason: "allowed"
