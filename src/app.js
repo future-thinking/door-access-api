@@ -85,6 +85,7 @@ app.get("/door", async (req, res) => {
   console.log("door request");
 
   const cardData = req.query.card;
+  console.log(cardData);
 
   const card = await db.get(`SELECT * FROM cards WHERE card=?`, [cardData]);
 
@@ -153,7 +154,7 @@ app.get("/door", async (req, res) => {
       cardData,
     ]);
     db.run(
-      `INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?)`,
+      `INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?, ?s)`,
       [toIsoString(new Date()), null, newCard.id, `scanned card not found`]
     );
     res.send(
