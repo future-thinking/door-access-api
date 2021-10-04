@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Future Thinking Webinterface</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="jquery.js"></script>
+  </head>
+  <body>
+    <h1>$ Future Thinking Web Interface</h1>
+
+    <form action="/add/user" method="GET" class="form">
+      <h2>Register</h2>
+      <input type="text" name="username" id="username" placeholder="Username" />
+      <input
+        type="password"
+        name="password"
+        id="password"
+        placeholder="Password"
+      />
+      <button type="submit">Create User</button>
+    </form>
+
+    <script>
+      function onLoginClick() {
+        console.log(
+          `/auth?username=${
+            document.getElementById("lusername").value
+          }&password=${document.getElementById("lpassword").value}`
+        );
+        $.ajax(
+          `/auth?username=${
+            document.getElementById("lusername").value
+          }&password=${document.getElementById("lpassword").value}`,
+          {
+            success: (res) => {
+              document.getElementById("token").value = res;
+            },
+          }
+        );
+      }
+    </script>
+    <div class="form">
+      <h2>Login</h2>
+      <input
+        type="text"
+        name="username"
+        id="lusername"
+        placeholder="Username"
+      />
+      <input
+        type="password"
+        name="password"
+        id="lpassword"
+        placeholder="Password"
+      />
+      <button onclick="onLoginClick()">Login</button>
+    </div>
+
+    <input type="text" name="token" id="token" placeholder="token" />
+
+    <script>
+      function addCard() {
+        $.ajax(`/add/${document.getElementById("cusername").value}/card`, {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + document.getElementById("token").value,
+          },
+          success: (msg) => alert(msg),
+        });
+      }
+    </script>
+    <div class="form">
+      <h2>Add Card</h2>
+      <input type="text" name="" id="cusername" placeholder="Username" />
+      <button onclick="addCard()">Add Card</button>
+    </div>
+
+    <div class="footer">
+      Future Thinking Web-Interface created by
+      <a href="https://p3ntest.dev">Julius</a> with ❤️
+      <br />
+      Jasper ist ein kek.
+    </div>
+
+    <canvas id="matrix" class="matrix"></canvas>
+    <script src="matrix.js"></script>
+  </body>
+</html>
