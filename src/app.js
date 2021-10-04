@@ -1,4 +1,3 @@
-import "./loadEnv.js";
 import express from "express";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
