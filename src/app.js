@@ -6,8 +6,6 @@ import { fileURLToPath } from "url";
 import TokenGenerator from "uuid-token-generator";
 import bearerToken from "express-bearer-token";
 
-const PORT = process.env.PORT || 80;
-
 const tokgen = new TokenGenerator(256, TokenGenerator.BASE62);
 
 const __filename = fileURLToPath(import.meta.url);
@@ -342,8 +340,8 @@ app.get("/cards", (req, res) => {
   res.redirect(`/user/${req.user.username}/cards`);
 });
 
-app.listen(PORT, function () {
-  console.log(`listening on *:${PORT}`);
+app.listen(80, function () {
+  console.log(`listening on *:${80}`);
 });
 
 function toIsoString(date) {
