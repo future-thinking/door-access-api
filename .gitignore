@@ -1,4 +1,6 @@
 api.db
+db/
+db/api.db
 
 # Logs
 logs

@@ -1,0 +1,1 @@
+docker run -p 3000:80 -v door-access-api:/usr/src/app/db -d future-thinking/door-access-api

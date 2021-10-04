@@ -18,7 +18,7 @@ let db;
 (async () => {
   // open the database
   db = await open({
-    filename: path.join(__dirname, "../api.db"),
+    filename: path.join(__dirname, "../db/api.db"),
     driver: sqlite3.Database,
   });
   await db.run(
