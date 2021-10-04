@@ -106,7 +106,7 @@ app.get("/door", async (req, res) => {
         cardData,
       ]);
       db.run(
-        `INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?)`,
+        `INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?, ?)`,
         [
           toIsoString(new Date()),
           doorMode.userID,
