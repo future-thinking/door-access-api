@@ -82,6 +82,7 @@ app.get("/add/user", async (req, res) => {
 
 app.get("/door", async (req, res) => {
   //TODO door authentication
+  console.log("door request");
 
   const cardData = req.query.card;
 
@@ -138,6 +139,7 @@ app.get("/door", async (req, res) => {
           card: "card already exists",
         })
       );
+      console.log("allowing");
       return;
     }
   }
