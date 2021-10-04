@@ -146,17 +146,6 @@ app.get("/door", async (req, res) => {
   }
 
   if (!card) {
-    db.run(`INSERT INTO cards (userID, card) VALUES (?, ?)`, [
-      doorMode.userID,
-      cardData,
-    ]);
-    const newCard = await db.run(`SELECT * FROM cards WHERE card = ?`, [
-      cardData,
-    ]);
-    db.run(
-      `INSERT INTO logs (time, userID, cardID, action) VALUES (datetime(?), ?, ?, ?s)`,
-      [toIsoString(new Date()), null, newCard.id, `scanned card not found`]
-    );
     res.send(
       JSON.stringify({
         open: false,
