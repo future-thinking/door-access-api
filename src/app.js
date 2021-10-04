@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 import TokenGenerator from "uuid-token-generator";
 import bearerToken from "express-bearer-token";
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 80;
 
 const tokgen = new TokenGenerator(256, TokenGenerator.BASE62);
 
