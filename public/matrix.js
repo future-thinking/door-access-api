@@ -25,7 +25,7 @@ function draw() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.02)";
   ctx.fillRect(0, 0, c.width, c.height);
 
-  ctx.fillStyle = "#0F0a";
+  ctx.fillStyle = "#0F0";
   //   ctx.fillStyle = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${
   //     Math.random() * 255
   //   }, 120)`;
