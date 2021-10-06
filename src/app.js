@@ -1,6 +1,5 @@
 import express from "express";
 import sqlite3 from "sqlite3";
-import { open } from "sqlite";
 import path from "path";
 import { fileURLToPath } from "url";
 import TokenGenerator from "uuid-token-generator";
@@ -15,9 +14,11 @@ let db;
 
 (async () => {
   // open the database
-  db = await open({
-    filename: path.join(__dirname, "../db/api.db"),
-    driver: sqlite3.Database,
+  db = new sqlite3.Database(path.join(__dirname, '../db/api.db'), (err) => {
+    if (err) {
+      console.error(err.message);
+    }
+    console.log('Connected to database.');
   });
   await db.run(
     `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY NOT NULL, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL)`
@@ -332,7 +333,7 @@ app.get("/cards", (req, res) => {
   res.redirect(`/user/${req.user.username}/cards`);
 });
 
-app.listen(80, function () {
+app.listen(3000, function () {
   console.log(`listening on *:${80}`);
 });
 
