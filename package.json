@@ -1,28 +1,26 @@
 {
-  "name": "door-access-api-new",
+  "name": "door-access-api",
   "version": "1.0.0",
   "description": "",
-  "main": "src/app.js",
-  "type": "module",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Shatter00/door-access-api.git"
+    "url": "git+https://github.com/future-thinking/door-access-api.git"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Lopfi",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Shatter00/door-access-api/issues"
+    "url": "https://github.com/future-thinking/door-access-api/issues"
   },
-  "homepage": "https://github.com/Shatter00/door-access-api#readme",
+  "homepage": "https://github.com/future-thinking/door-access-api#readme",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "express": "^4.17.1",
-    "express-bearer-token": "^2.4.0",
-    "node.js": "0.0.1-security",
-    "sqlite3": "^5.0.2",
-    "uuid-token-generator": "^1.0.0"
+    "express-session": "^1.17.2",
+    "mysql": "^2.18.1",
+    "path": "^0.12.7"
   }
 }
