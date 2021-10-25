@@ -20,7 +20,8 @@
     "bcrypt": "^5.0.1",
     "express": "^4.17.1",
     "express-session": "^1.17.2",
-    "mysql": "^2.18.1",
-    "path": "^0.12.7"
+    "mqtt": "^4.2.8",
+    "path": "^0.12.7",
+    "sync-mysql": "^3.0.1"
   }
 }

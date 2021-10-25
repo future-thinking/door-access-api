@@ -11,17 +11,46 @@ module.exports = function (app, db) {
     
     router.get("/home", (req, res) => res.status(200).sendFile(path.join(__dirname, '../../public/html', 'main.html')));
     
-    router.post('/auth', function(req, res) {
-        var username = req.body.username;
-        var password = req.body.password;
-        if (username && password) {
-            db.query('SELECT * FROM users WHERE username = ?', [username], function(error, results, fields) {
-                if (results.length > 0) {
-                        if(bcrypt.compareSync(password, results[0].password)) res.redirect('/home');
-                        else res.status(200).send('Incorrect Username and/or Password!');
-                } else res.status(401).send('Incorrect Username and/or Password!');
-            });
-        } else res.status(400).send('Please enter Username and Password!');
+    router.post('/auth', (req, res) => {
+        let username, password;
+        if(req.body.username && req.body.password) ({username, password} = req.body);
+        else {
+            res.status(400).send('Please enter Username and Password!');
+            return;
+        }
+        db.query(`SELECT * FROM users WHERE username = ?`, [username], function(error, results, fields) {
+            if (results.length > 0) {
+                    if(bcrypt.compareSync(password, results[0].password)) res.redirect('/home');
+                    else res.status(200).send('Incorrect Username and/or Password!');
+            } else res.status(401).send('Incorrect Username and/or Password!');
+        });
+    });
+
+    router.route('/user')
+    .get(function(req, res) {
+        
+    })
+    .post(async (req, res) => {
+        const username = req.query.username;
+        let password = req.query.password;
+        
+        if (!username || !password) {
+            res.status(400).send('Please enter Username and Password!');        
+            return;
+        }
+        
+        const existing = await db.query(`SELECT username FROM users WHERE LOWER(username)=LOWER(?)`, [username]);
+        
+        if (!existing) {
+            password = bcrypt.hashSync(password, saltRounds);
+
+            await db.run(`INSERT INTO users (username, password) VALUES (?, ?)`, [
+            username,
+            password,
+            ]);
+        
+            res.status(200).send("ok");
+        } else res.send("user already exists");
     });
 
     router.get("*", (req, res) => res.status(404).redirect('https://http.cat/404'));

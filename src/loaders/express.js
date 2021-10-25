@@ -7,9 +7,6 @@ const routes = require('../routes');
 
 module.exports = function ({ app }, connection){
 
-    app.get('/status', (req, res) => { res.status(200).end(); });
-    app.head('/status', (req, res) => { res.status(200).end(); });
-
     app.use(express.static(path.join(__dirname, "../../public")));
     app.use(express.json());
     app.use(express.urlencoded({extended: true}));
