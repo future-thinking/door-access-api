@@ -15,15 +15,14 @@ module.exports = function (app, db) {
         let username, password;
         if(req.body.username && req.body.password) ({username, password} = req.body);
         else {
-            res.status(400).send('Please enter Username and Password!');
+            res.status(400).send('Please enter username and password!');
             return;
         }
-        db.query(`SELECT * FROM users WHERE username = ?`, [username], function(error, results, fields) {
-            if (results.length > 0) {
-                    if(bcrypt.compareSync(password, results[0].password)) res.redirect('/home');
-                    else res.status(200).send('Incorrect Username and/or Password!');
-            } else res.status(401).send('Incorrect Username and/or Password!');
-        });
+        const results = db.query(`SELECT * FROM users WHERE username = ?`, [username]);
+        if (results.length > 0) {
+                if(bcrypt.compareSync(password, results[0].password)) res.redirect('/home');
+                else res.status(200).send('Incorrect username and/or password!');
+        } else res.status(401).send('Incorrect username and/or password!');
     });
 
     router.route('/user')
@@ -35,7 +34,7 @@ module.exports = function (app, db) {
         let password = req.query.password;
         
         if (!username || !password) {
-            res.status(400).send('Please enter Username and Password!');        
+            res.status(400).send('Please enter username and password!');        
             return;
         }
         

@@ -2,5 +2,11 @@
     "express": {
         "port": 3000,
         "session_secret": "asdf"
+    },
+    "sql": {
+        "host": "localhost",
+        "user": "root",
+        "password": "1234",
+        "database": "door"
     }
 }

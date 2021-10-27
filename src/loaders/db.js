@@ -1,12 +1,7 @@
 const sql = require('sync-mysql');
 
 module.exports = function () {
-  var connection = new sql({
-    host: "localhost",
-    user: "root",
-    password: "1234",
-    database: "door",
-  });
+  var connection = new sql(require('../config.json').sql);
 
   connection.query(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY NOT NULL, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL)`);
   connection.query(`CREATE TABLE IF NOT EXISTS tokens (id INTEGER PRIMARY KEY NOT NULL, userID INTEGER NOT NULL, token TEXT, FOREIGN KEY (userID) REFERENCES users (id))`);

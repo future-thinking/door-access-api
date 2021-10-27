@@ -15,9 +15,7 @@ module.exports = function (connection){
 
     client.on('connect', function () {
     client.subscribe('door/card', function (err) {
-        if (!err) {
-        //client.publish('door/open', 'true')
-        }
+        if (!err) console.error(err);
     });
     });
 
