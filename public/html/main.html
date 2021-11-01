@@ -1,1 +1,52 @@
-HI
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GO-FT</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/form.css">
+    <link rel="stylesheet" href="../css/popup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../js/index.js" defer></script>
+</head>
+<body>
+    <div class="popup" id="sure">
+        <span class="helper"></span>
+        <div>
+            <p>Are you sure?</p>
+            <button class="popup-button" id="popup-yes">Yes</button>
+            <button class="popup-button" id="popup-no" >No</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="top-float">
+            <ul class="navbar">
+                <li class="navbar-element"><a href="/" id="home-btn" class="navbar-button" class="active">Home</a></li>
+                <li class="navbar-element"><a onclick="door()" id="door-btn" class="navbar-button">Door</a></li>
+                <li class="navbar-element"><a id="inv-btn" class="navbar-button">Inventory Management</a></li>
+            </ul>
+        </div>
+        <div id="db">
+            <h1>Logs</h1>
+            <ul id="db-list">
+
+            </ul>
+        </div>
+        <div id="add-menu">
+            <form action="/user" method="PUT" id="add-user">
+                <input type="text" name="username" placeholder="Username" required><br>
+
+                <input type="password" name="password" placeholder="Password" required><br>
+
+                <input type="submit">
+            </form>
+            <form action="" id="add-card"></form>
+        </div>
+        <div class="stats1"></div>
+        <div class="stats2"></div>
+        <div class="stats3"></div>
+    </div>
+</body>
+</html>

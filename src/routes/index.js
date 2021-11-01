@@ -29,7 +29,7 @@ module.exports = function (app, db) {
     .get(function(req, res) {
         
     })
-    .post(async (req, res) => {
+    .put(async (req, res) => {
         const username = req.query.username;
         let password = req.query.password;
         
