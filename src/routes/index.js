@@ -54,5 +54,6 @@ module.exports = function (app, db) {
 
     router.get("*", (req, res) => res.status(404).redirect('https://http.cat/404'));
 
+    
     return router;
 }   
