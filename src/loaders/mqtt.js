@@ -1,4 +1,5 @@
 const mqtt = require('mqtt');
+const config = require('../config.json').mqtt;
 
 const doorModes = {
     DEFAULT: "default",
@@ -11,10 +12,10 @@ const doorModes = {
   };
 
 module.exports = function (connection){
-    const client = mqtt.connect('mqtt://127.0.0.1');
+    const client = mqtt.connect(config.host);
 
     client.on('connect', function () {
-    client.subscribe('door/card', function (err) {
+    client.subscribe(config.cards, function (err) {
         if (!err) console.error(err);
     });
     });
@@ -49,12 +50,12 @@ module.exports = function (connection){
                     ]
                 );
             }
-            client.publish('door/open', 'false');
+            client.publish(config.state, 'false');
             return;
         }
 
         if (card.length <= 0) {
-            client.publish('door/open', 'false');
+            client.publish(config.state, 'false');
             connection.query(
                 `INSERT INTO logs (time, userID, cardID, action) VALUES (now(), NULL, NULL, ?)`,
                 [`scanned card doesn't exist`]);
@@ -67,14 +68,14 @@ module.exports = function (connection){
             connection.query(
             `INSERT INTO logs (time, userID, cardID, action) VALUES (now(), ?, ?, ?)`,
             [card.userID, card.id, `user does not have permission to open door`]);
-            client.publish('door/open', 'false');
+            client.publish(config.state, 'false');
             return;
         } else {
             connection.query(
             `INSERT INTO logs (time, userID, cardID, action) VALUES (now(), ?, ?, ?)`,
             [card.userID, card.id, `door opened by user`]
             );
-            client.publish('door/open', 'true');
+            client.publish(config.state, 'true');
             return;
         }
     });
