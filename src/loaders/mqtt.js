@@ -15,9 +15,10 @@ module.exports = function (connection){
     const client = mqtt.connect(config.host);
 
     client.on('connect', function () {
-    client.subscribe(config.cards, function (err) {
-        if (!err) console.error(err);
-    });
+        console.log("mqtt connected");
+        client.subscribe(config.cards, function (err) {
+            if (!err) console.error(err);
+        });
     });
 
     client.on('message', async function (topic, message) {

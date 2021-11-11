@@ -4,14 +4,14 @@
         "session_secret": "asdf"
     },
     "mqtt": {
-        "host": "mosquitto",
+        "host": "mqtt://mosquitto",
         "state": "door/open",
         "cards": "door/card"
     },
     "sql": {
-        "host": "localhost",
+        "host": "mariadb",
         "user": "root",
-        "password": "1234",
+        "password": "",
         "database": "door"
     }
 }

@@ -15,6 +15,27 @@ module.exports = function ({ app }, connection){
         resave: true,
         saveUninitialized: true
     }));
+    app.use((req, res, next) => {
+        if (!req.session.token) {
+            res.send("unauthorized");
+            return;
+          }
+        
+          const user = await db.get(`SELECT * FROM tokens WHERE token=?`, [req.token]);
+        
+          if (!user) {
+            res.send("unauthorized");
+            return;
+          }
+        
+          req.permissions = (
+            await db.all(`SELECT * FROM permissions WHERE userID=?`, [user.userID])
+          ).map((el) => el.permission);
+        
+          req.user = await db.get(`SELECT * FROM users WHERE id=?`, [user.userID]);
+        
+          next();
+    });
     app.use(routes(app, connection));
     
     return app;
