@@ -15,7 +15,7 @@ module.exports = function ({ app }, connection){
         resave: true,
         saveUninitialized: true
     }));
-    app.use((req, res, next) => {
+    app.use(async (req, res, next) => {
         if (!req.session.token) {
             res.send("unauthorized");
             return;
