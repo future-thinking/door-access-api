@@ -23,12 +23,12 @@ module.exports = function (connection){
         const cardData = message.toString();
         console.log("Scanned card: " + cardData);
 
-        const card = connection.query(`SELECT * FROM cards WHERE card=?`, [cardData]);
+        const card = connection.query(`SELECT * FROM cards WHERE card=?`, [cardData])[0];
 
         if (doorMode.mode === doorModes.SCAN) {
             doorMode.mode = doorModes.DEFAULT;
 
-            if (card.length <= 0) {
+            if (!card) {
                 connection.query(`INSERT INTO cards (userID, card) VALUES (?, ?)`, [doorMode.userID, cardData]);
                 const newCard = await connection.query(`SELECT * FROM cards WHERE card = ?`, [cardData]);
                 connection.query(
@@ -53,7 +53,7 @@ module.exports = function (connection){
             return;
         }
 
-        if (card.length <= 0) {
+        if (!card) {
             client.publish('door/open', 'false');
             connection.query(
                 `INSERT INTO logs (time, userID, cardID, action) VALUES (now(), NULL, NULL, ?)`,
