@@ -1,4 +1,5 @@
 const mqtt = require('mqtt');
+const config = require('../config.json');
 
 const doorModes = {
     DEFAULT: "default",
@@ -11,7 +12,7 @@ const doorModes = {
   };
 
 module.exports = function (connection){
-    const client = mqtt.connect('mqtt://127.0.0.1');
+    const client = mqtt.connect(config.mqtt.host);
 
     client.on('connect', function () {
     client.subscribe('door/card', function (err) {
