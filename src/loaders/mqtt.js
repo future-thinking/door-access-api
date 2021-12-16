@@ -1,5 +1,4 @@
 const mqtt = require('mqtt');
-const config = require('../config.json').mqtt;
 
 const doorModes = {
     DEFAULT: "default",
@@ -12,25 +11,24 @@ const doorModes = {
   };
 
 module.exports = function (connection){
-    const client = mqtt.connect(config.host);
+    const client = mqtt.connect('mqtt://127.0.0.1');
 
     client.on('connect', function () {
-        console.log("mqtt connected");
-        client.subscribe(config.cards, function (err) {
-            if (!err) console.error(err);
-        });
+    client.subscribe('door/card', function (err) {
+        if (!err) console.error(err);
+    });
     });
 
     client.on('message', async function (topic, message) {
         const cardData = message.toString();
         console.log("Scanned card: " + cardData);
 
-        const card = connection.query(`SELECT * FROM cards WHERE card=?`, [cardData]);
+        const card = connection.query(`SELECT * FROM cards WHERE card=?`, [cardData])[0];
 
         if (doorMode.mode === doorModes.SCAN) {
             doorMode.mode = doorModes.DEFAULT;
 
-            if (card.length <= 0) {
+            if (!card) {
                 connection.query(`INSERT INTO cards (userID, card) VALUES (?, ?)`, [doorMode.userID, cardData]);
                 const newCard = await connection.query(`SELECT * FROM cards WHERE card = ?`, [cardData]);
                 connection.query(
@@ -51,12 +49,12 @@ module.exports = function (connection){
                     ]
                 );
             }
-            client.publish(config.state, 'false');
+            client.publish('door/open', 'false');
             return;
         }
 
-        if (card.length <= 0) {
-            client.publish(config.state, 'false');
+        if (!card) {
+            client.publish('door/open', 'false');
             connection.query(
                 `INSERT INTO logs (time, userID, cardID, action) VALUES (now(), NULL, NULL, ?)`,
                 [`scanned card doesn't exist`]);
@@ -69,14 +67,14 @@ module.exports = function (connection){
             connection.query(
             `INSERT INTO logs (time, userID, cardID, action) VALUES (now(), ?, ?, ?)`,
             [card.userID, card.id, `user does not have permission to open door`]);
-            client.publish(config.state, 'false');
+            client.publish('door/open', 'false');
             return;
         } else {
             connection.query(
             `INSERT INTO logs (time, userID, cardID, action) VALUES (now(), ?, ?, ?)`,
             [card.userID, card.id, `door opened by user`]
             );
-            client.publish(config.state, 'true');
+            client.publish('door/open', 'true');
             return;
         }
     });
